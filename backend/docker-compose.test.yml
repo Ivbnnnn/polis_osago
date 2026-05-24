@@ -1,0 +1,39 @@
+services:
+  postgres_test:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: api_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    networks:
+      - test_network
+
+  info_api_test:
+    build: ./info_api
+    command: pytest
+    environment:
+      PYTHONPATH: /app
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres_test:5432/api_test
+    depends_on:
+      - postgres_test
+    networks:
+      - test_network
+
+  main_api_test:
+    build: ./main_api
+    command: pytest
+    environment:
+      PYTHONPATH: /app
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres_test:5432/api_test
+      INFO_API_URL: http://info_api_test:5001
+      BASE_PRICE: 10000
+    depends_on:
+      - postgres_test
+    networks:
+      - test_network
+
+networks:
+  test_network:
+    driver: bridge
