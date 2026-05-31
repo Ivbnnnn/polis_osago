@@ -22,6 +22,8 @@ export type CalculationRequest = {
   policy_start_date: string;
 };
 
+export type TestCalculationData = CalculationRequest;
+
 export type Offer = {
   id?: number;
   company_id?: number;
@@ -60,6 +62,11 @@ export const osagoApi = {
 
   async getOffers(data: CalculationRequest) {
     const response = await api.post<OffersResponse>("/osago/get_offers", data);
+    return response.data;
+  },
+
+  async testData() {
+    const response = await api.get<TestCalculationData>("/osago/test-data");
     return response.data;
   },
 

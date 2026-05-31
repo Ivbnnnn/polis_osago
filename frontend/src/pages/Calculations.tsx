@@ -258,6 +258,7 @@ export default function Calculations() {
   const [details, setDetails] = useState<CalculationDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCalculating, setIsCalculating] = useState(false);
+  const [isTestDataLoading, setIsTestDataLoading] = useState(false);
   const [isChoosingId, setIsChoosingId] = useState<number | null>(null);
   const [isPaying, setIsPaying] = useState(false);
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
@@ -347,26 +348,36 @@ export default function Calculations() {
     );
   };
 
-  const handleFillTestData = () => {
-    setIdentifierType("license_plate");
-    setIdentifierValue("О451НУ60");
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const tomorrowString = tomorrow.toISOString().slice(0, 10);
-
-    setForm((prev) => ({
-      ...prev,
-      lastname: "Соколова",
-      firstname: "Климент",
-      middlename: "Феофанович",
-      license_serial: "2728",
-      license_number: "602926",
-      policy_start_date: tomorrowString,
-    }));
-    setSelectedCompanies([]);
-    setMessage("Тестовые данные подставлены");
+  const handleFillTestData = async () => {
+    setIsTestDataLoading(true);
+    setMessage("");
     setError("");
+
+    try {
+      const testData = await osagoApi.testData();
+      const identifier =
+        (["license_plate", "vin", "body_number", "chassis_number"] as const)
+          .map((type) => ({ type, value: testData[type] }))
+          .find((item) => Boolean(item.value));
+
+      if (!identifier) {
+        setError("В тестовых данных не найден идентификатор автомобиля");
+        return;
+      }
+
+      setIdentifierType(identifier.type);
+      setIdentifierValue(identifier.value ?? "");
+      setForm(testData);
+      setSelectedCompanies(testData.insurance_companies ?? []);
+      setOffers([]);
+      setCalculationId(null);
+      setSelectedCompanyId(null);
+      setMessage("Тестовые данные подставлены");
+    } catch {
+      setError("Не удалось получить тестовые данные");
+    } finally {
+      setIsTestDataLoading(false);
+    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -677,9 +688,10 @@ export default function Calculations() {
             <button
               type="button"
               onClick={handleFillTestData}
-              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+              disabled={isTestDataLoading}
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:bg-slate-100 disabled:text-slate-500"
             >
-              Тест
+              {isTestDataLoading ? "Загрузка..." : "Тест"}
             </button>
           </div>
         </form>

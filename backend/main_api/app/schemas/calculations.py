@@ -75,3 +75,7 @@ class CalculationRequest(BaseModel):
     license_number:str | None = None
     use_period:int
     policy_start_date:date
+
+
+class CalculationTestData(CalculationRequest):
+    pass

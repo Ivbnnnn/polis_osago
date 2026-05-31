@@ -1,8 +1,14 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.deps import get_calculation_service, get_info_api_client, get_current_user_id
 from app.services.calculation import CalculationService
-from app.schemas import CalculationRequest, CalculationChooseOffer, PayOffer, SearchRequest
+from app.schemas import (
+    CalculationRequest,
+    CalculationTestData,
+    CalculationChooseOffer,
+    PayOffer,
+    SearchRequest,
+)
 from app.clients.info_api import InfoAPIClient
 router = APIRouter(
     prefix="/osago",
@@ -17,6 +23,21 @@ async def search(
 ):
     result =  await info_api.search(data.model_name, data.relations, data.filters)
     return result
+
+
+@router.get("/test-data", response_model=CalculationTestData)
+async def get_test_data(
+    _user_id: int = Depends(get_current_user_id),
+    info_api: InfoAPIClient = Depends(get_info_api_client),
+):
+    try:
+        return await info_api.get_test_calculation_data()
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+
 
 @router.post("/get_offers", status_code=status.HTTP_201_CREATED)
 async def get_offers(

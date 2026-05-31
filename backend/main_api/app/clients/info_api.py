@@ -1,5 +1,6 @@
 import httpx
 from decimal import Decimal
+from datetime import date, timedelta
 from typing import Any
 class InfoAPIClient:
     def __init__(self, client: httpx.AsyncClient):
@@ -223,6 +224,59 @@ class InfoAPIClient:
             },
         )
         return result
+
+    async def get_test_calculation_data(self) -> dict[str, Any]:
+        owners = await self.search(
+            model_name="Person",
+            relations=["addresses"],
+            filters=[],
+        )
+        drivers = await self.search(
+            model_name="Driver",
+            relations=[],
+            filters=[],
+        )
+        vehicles = await self.search(
+            model_name="Vehicle",
+            relations=["sts_documents"],
+            filters=[],
+        )
+
+        if not owners or not drivers or not vehicles:
+            missing = []
+
+            if not owners:
+                missing.append("Person")
+
+            if not drivers:
+                missing.append("Driver")
+
+            if not vehicles:
+                missing.append("Vehicle")
+
+            raise ValueError(
+                "Not enough info_api data for test calculation: "
+                + ", ".join(missing)
+            )
+
+        owner = sorted(owners, key=lambda item: item["id"])[0]
+        driver = sorted(drivers, key=lambda item: item["id"])[0]
+        vehicle = sorted(vehicles, key=lambda item: item["id"])[0]
+
+        return {
+            "lastname": owner["lastname"],
+            "firstname": owner["firstname"],
+            "middlename": owner.get("middlename"),
+            "insurance_companies": None,
+            "license_plate": vehicle.get("license_plate"),
+            "vin": vehicle.get("vin"),
+            "body_number": vehicle.get("body_number"),
+            "chassis_number": vehicle.get("chassis_number"),
+            "license_serial": driver["license_serial"],
+            "license_number": driver["license_number"],
+            "use_period": 12,
+            "policy_start_date": date.today() + timedelta(days=1),
+        }
     
 
     async def search(self, model_name:str, relations:list[str], filters):

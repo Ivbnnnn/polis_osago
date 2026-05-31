@@ -11,6 +11,7 @@ from app.schemas.calculations import (
     CalculationUpdate,
     CalculationRead,
     CalculationRequest,
+    CalculationTestData,
     CalculationChooseOffer,
     PayOffer,
     SearchRequest
@@ -47,6 +48,7 @@ __all__ = [
     "CalculationCompanyRead",
     "CalculationCompanyCreate",
     "CalculationRequest",
+    "CalculationTestData",
     "AgentCreate",
     "CalculationChooseOffer",
     "AgentCreateRepository",

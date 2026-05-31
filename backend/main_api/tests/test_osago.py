@@ -25,6 +25,22 @@ class FakeInfoAPIClient:
             }
         ]
 
+    async def get_test_calculation_data(self):
+        return {
+            "lastname": "Иванов",
+            "firstname": "Иван",
+            "middlename": "Иванович",
+            "insurance_companies": None,
+            "license_plate": "А123ВС77",
+            "vin": "XTA12345678901234",
+            "body_number": None,
+            "chassis_number": None,
+            "license_serial": "1111",
+            "license_number": "222222",
+            "use_period": 12,
+            "policy_start_date": "2026-05-25",
+        }
+
 
 class FakeCalculationService:
     async def make_offers(self, data, info_api, agent_id: int):
@@ -125,6 +141,25 @@ async def test_search_success(client, auth_headers):
     assert data[0]["filters"] == {
         "name": "Test Insurance",
     }
+
+
+@pytest.mark.asyncio
+async def test_get_test_data_success(client, auth_headers):
+    response = await client.get(
+        "/osago/test-data",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["lastname"] == "Иванов"
+    assert data["firstname"] == "Иван"
+    assert data["license_plate"] == "А123ВС77"
+    assert data["license_serial"] == "1111"
+    assert data["license_number"] == "222222"
+    assert data["insurance_companies"] is None
 
 
 @pytest.mark.asyncio
